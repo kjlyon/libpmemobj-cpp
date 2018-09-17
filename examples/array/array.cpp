@@ -115,7 +115,9 @@ public:
 		} else {
 			transaction::exec_tx(pop, [&] {
 				auto new_array = make_persistent<array_list>();
+
 				strcpy(new_array->name, name);
+
 				new_array->size = (size_t)size;
 				new_array->array = make_persistent<int[]>(size);
 				new_array->next = nullptr;
@@ -151,14 +153,16 @@ public:
 			// cur = prev= head, either only one element in list or
 			// array is first element
 			cur_arr = head;
-		} else
+		} else {
 			cur_arr = prev_arr->next;
+		}
 
 		transaction::exec_tx(pop, [&] {
 			if (head == cur_arr)
 				head = cur_arr->next;
 			else
 				prev_arr->next = cur_arr->next;
+
 			delete_persistent<int[]>(cur_arr->array, cur_arr->size);
 			delete_persistent<array_list>(cur_arr);
 		});
@@ -169,13 +173,15 @@ public:
 	print_array(const char *name)
 	{
 		persistent_ptr<array_list> arr = find_array(name);
-		if (arr == nullptr)
+		if (arr == nullptr) {
 			std::cout << "No array found with name: " << name
 				  << std::endl;
-		else {
+		} else {
 			std::cout << arr->name << " = [";
+
 			for (size_t i = 0; i < arr->size - 1; i++)
 				std::cout << arr->array[i] << ", ";
+
 			std::cout << arr->array[arr->size - 1] << "]"
 				  << std::endl;
 		}
@@ -186,10 +192,10 @@ public:
 	resize(pool_base &pop, const char *name, int size)
 	{
 		persistent_ptr<array_list> arr = find_array(name);
-		if (arr == nullptr)
+		if (arr == nullptr) {
 			std::cout << "No array found with name: " << name
 				  << std::endl;
-		else if (size < 1) {
+		} else if (size < 1) {
 			std::cout << "size must be a non-negative integer"
 				  << std::endl;
 			print_usage(array_op::REALLOC, prog_name);
@@ -197,12 +203,17 @@ public:
 			transaction::exec_tx(pop, [&] {
 				persistent_ptr<int[]> new_array =
 					make_persistent<int[]>(size);
+
 				size_t copy_size = arr->size;
+
 				if ((size_t)size < arr->size)
 					copy_size = (size_t)size;
+
 				for (size_t i = 0; i < copy_size; i++)
 					new_array[i] = arr->array[i];
+
 				delete_persistent<int[]>(arr->array, arr->size);
+
 				arr->size = (size_t)size;
 				arr->array = new_array;
 			});
@@ -245,8 +256,7 @@ public:
 					     "<print|alloc|free|realloc> "
 					     "<array_name>"
 					  << std::endl;
-		};
-		return;
+		}
 	}
 
 private:
@@ -256,6 +266,7 @@ private:
 	{
 		if (head == nullptr)
 			return head;
+
 		persistent_ptr<array_list> cur = head;
 		persistent_ptr<array_list> prev = head;
 
@@ -266,9 +277,11 @@ private:
 				else
 					return cur;
 			}
+
 			prev = cur;
 			cur = cur->next;
 		}
+
 		return nullptr;
 	}
 };
@@ -277,7 +290,8 @@ private:
 int
 main(int argc, char *argv[])
 {
-	/* Inputs should be one of:
+	/*
+	 * Inputs should be one of:
 	 *   ./example-array <file_name> print <array_name>
 	 *   ./example-array <file_name> free <array_name>
 	 *   ./example-array <file_name> realloc <array_name> <size>
@@ -291,6 +305,7 @@ main(int argc, char *argv[])
 			  << " <file_name> <print|alloc|free|realloc> "
 			     "<array_name>"
 			  << std::endl;
+
 		return 1;
 	}
 
@@ -298,9 +313,9 @@ main(int argc, char *argv[])
 	const char *name = argv[3];
 	if (strlen(name) > MAX_BUFFLEN) {
 		std::cout << "Name exceeds buffer length of 30 characters. "
-			     "Please "
-			     "shorten and try again."
+			     "Please shorten and try again."
 			  << std::endl;
+
 		return 1;
 	}
 
@@ -343,9 +358,9 @@ main(int argc, char *argv[])
 				arr->print_usage(op, prog_name);
 			break;
 		default:
-			std::cout
-				<< "Ruh roh! You passed an invalid operation!!"
-				<< std::endl;
+			std::cout << "Ruh roh! You passed an invalid operation!"
+				  << std::endl;
+
 			arr->print_usage(op, prog_name);
 			break;
 	}
